@@ -45,6 +45,13 @@ except ImportError:
 else:
     _ssl_SSLError = ssl.SSLError
 
+try:
+    import requests.exceptions
+except ImportError:
+    _requests_ChunkedEncodingError = object()
+else:
+    _requests_ChunkedEncodingError = requests.exceptions.ChunkedEncodingError
+
 from email.generator import Generator
 from email.mime.multipart import MIMEMultipart
 from email.mime.nonmultipart import MIMENonMultipart
@@ -199,6 +206,8 @@ def _retry_request(
         except ConnectionError as connection_error:
             # Needs to be before socket.error as it's a subclass of OSError
             exception = connection_error
+        except _requests_ChunkedEncodingError as chunked_encoding_error:
+            exception = chunked_encoding_error
         except OSError as socket_error:
             # errno's contents differ by platform, so we have to match by name.
             # Some of these same errors may have been caught above, e.g. ECONNRESET *should* be
